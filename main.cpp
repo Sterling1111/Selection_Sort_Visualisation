@@ -8,23 +8,9 @@
 
 using namespace sf;
 
-Time delayTime = milliseconds(5);
-Time shortDelay = microseconds(50);
-Time longDelay = milliseconds(500);
-
-namespace sound {
-#define TWOPI 6.283185307
-
-    short SineWave(double time, double freq, double amp) {
-        short result;
-        double tpc = 44100 / freq; // ticks per cycle
-        double cycles = time / tpc;
-        double rad = TWOPI * cycles;
-        short amplitude = 32767 * amp;
-        result = amplitude * sin(rad);
-        return result;
-    }
-}
+Time delayTime = milliseconds(20);
+Time shortDelay = microseconds(1000);
+Time longDelay = milliseconds(20);
 
 void render(RenderWindow* window, const std::vector<RectangleShape> r) {
     window->clear();
@@ -34,7 +20,7 @@ void render(RenderWindow* window, const std::vector<RectangleShape> r) {
     window->display();
 }
 
-void selectionSortThread(RenderWindow* window, bool& running, std::vector<int>& v, std::vector<RectangleShape> r, std::vector<sf::Sound>& s) {
+void selectionSortThread(RenderWindow* window, bool& running, std::vector<int>& v, std::vector<RectangleShape> r) {
     render(window, r);
     sleep(delayTime);
     size_t size{v.size()};
@@ -45,7 +31,6 @@ void selectionSortThread(RenderWindow* window, bool& running, std::vector<int>& 
         sleep(delayTime);
         for(unsigned j{i+1}; j < size && running; j++) {
             r[j].setFillColor(Color(255, 255, 255, 50));
-            //r[j].setFillColor(Color::Red);
             render(window, r);
             sleep(shortDelay);
             r[j].setFillColor(Color::White);
@@ -64,13 +49,10 @@ void selectionSortThread(RenderWindow* window, bool& running, std::vector<int>& 
         std::swap(r[i], r[minIndex]);
         sleep(longDelay);
         r[i].setFillColor(Color::Green);
-        //s[0].play();
         if(i != 0) {
             r[i-1].setFillColor(Color::White);
         }
         render(window, r);
-        s[i].play();
-        sleep(longDelay);
     }
     r[r.size() - 2].setFillColor(Color::White);
     r[r.size() - 1].setFillColor(Color::Green);
@@ -85,22 +67,6 @@ int main() {
     RenderWindow window(VideoMode(1000, 600), "Sort Visualiser");
     //window.setFramerateLimit(60);
 
-    sf::SoundBuffer buffer;
-    std::vector<sf::SoundBuffer> buffers(100);
-    std::vector<sf::Sound> sounds(100);
-    std::vector<sf::Int16> samples(100);
-    std::vector<std::vector<sf::Int16>> vec_of_samples(100);
-
-    for (int j = 99; j >= 0; --j) {
-        for (int i = 0; i < 44100; i++) {
-            samples.push_back(sound::SineWave(i, 200 + j * 10, 1));
-        }
-        vec_of_samples[j] = samples;
-        buffers[j].loadFromSamples(&(vec_of_samples[j])[0], vec_of_samples[j].size(), 1, 44100);
-        sounds[j].setBuffer(buffers[j]);
-        samples.clear();
-    }
-
     std::vector<int> v(100);
     std::vector<RectangleShape> r(100);
     for (int i = 0; i < 100; ++i) {
@@ -113,8 +79,8 @@ int main() {
         r[i].setOutlineColor(Color::Black);
     }
     bool running{true};
-    Thread renderThread([capture0 = &window, &running, &v, &r, &sounds] {
-        return selectionSortThread(capture0, running, v, r, sounds);
+    Thread renderThread([capture0 = &window, &running, &v, &r] {
+        return selectionSortThread(capture0, running, v, r);
     });
     window.setActive(false);
     renderThread.launch();

@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 14)
 
 add_executable(sortVisualiser main.cpp)
 
+set(SFML_STATIC_LIBRARIES true)
+
 
 set(SFML_DIR ${CMAKE_SOURCE_DIR}/SFML/lib/cmake/SFML)
 find_package(SFML COMPONENTS system window graphics audio network REQUIRED)
